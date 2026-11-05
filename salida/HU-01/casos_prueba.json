@@ -1,0 +1,253 @@
+{
+  "historia": "HU-01",
+  "casos": [
+    {
+      "id": "CP-01",
+      "escenario": "Registro exitoso de un empleado con datos válidos",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con el correo ana.perez@empresa.com",
+        "Es el primer empleado que se registra en el sistema (base de datos vacía de empleados)"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'Ana Pérez', correo 'ANA.PEREZ@EMPRESA.COM', puesto 'Analista de RRHH', departamento 'Recursos Humanos' y fecha_ingreso '2024-05-01'",
+        "Verificar el código de respuesta",
+        "Verificar el cuerpo de la respuesta",
+        "Consultar el empleado creado vía GET /api/empleados para confirmar los datos guardados"
+      ],
+      "datos": {
+        "nombre": "Ana Pérez",
+        "correo": "ANA.PEREZ@EMPRESA.COM",
+        "puesto": "Analista de RRHH",
+        "departamento": "Recursos Humanos",
+        "fecha_ingreso": "2024-05-01"
+      },
+      "resultado_esperado": "Responde 201, el empleado se guarda con estado 'activo', el correo se normaliza a 'ana.perez@empresa.com' y se asigna el número de empleado 'EMP-0001'"
+    },
+    {
+      "id": "CP-02",
+      "escenario": "Registro exitoso de un empleado con datos válidos",
+      "nivel": "e2e",
+      "precondiciones": [
+        "No existe ningún empleado con el correo ana.perez@empresa.com",
+        "Es el primer empleado que se registra en el sistema"
+      ],
+      "pasos": [
+        "Abrir el formulario de alta de empleado",
+        "Completar el campo 'empleado-nombre' con 'Ana Pérez'",
+        "Completar el campo 'empleado-correo' con 'ANA.PEREZ@EMPRESA.COM'",
+        "Completar el campo 'empleado-puesto' con 'Analista de RRHH'",
+        "Seleccionar 'Recursos Humanos' en 'empleado-departamento'",
+        "Completar el campo 'empleado-fecha-ingreso' con '2024-05-01'",
+        "Hacer clic en 'empleado-guardar'",
+        "Verificar el texto del elemento 'mensaje-exito'"
+      ],
+      "datos": {
+        "nombre": "Ana Pérez",
+        "correo": "ANA.PEREZ@EMPRESA.COM",
+        "puesto": "Analista de RRHH",
+        "departamento": "Recursos Humanos",
+        "fecha_ingreso": "2024-05-01"
+      },
+      "resultado_esperado": "La pantalla muestra en 'mensaje-exito' el texto 'Empleado EMP-0001 registrado con éxito'"
+    },
+    {
+      "id": "CP-03",
+      "escenario": "Rechazo por correo ya registrado",
+      "nivel": "api",
+      "precondiciones": [
+        "Ya existe un empleado registrado con el correo carlos.ruiz@empresa.com"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'Carlos Ruiz', correo 'CARLOS.RUIZ@EMPRESA.COM', puesto 'Vendedor', departamento 'Ventas' y fecha_ingreso '2024-03-10'",
+        "Verificar el código de respuesta",
+        "Verificar el mensaje de error en el cuerpo de la respuesta",
+        "Consultar GET /api/empleados para confirmar que no se creó un nuevo registro"
+      ],
+      "datos": {
+        "nombre": "Carlos Ruiz",
+        "correo": "CARLOS.RUIZ@EMPRESA.COM",
+        "puesto": "Vendedor",
+        "departamento": "Ventas",
+        "fecha_ingreso": "2024-03-10"
+      },
+      "resultado_esperado": "Responde 409 con detail 'El correo ya está registrado' y no se crea un nuevo empleado"
+    },
+    {
+      "id": "CP-04",
+      "escenario": "Rechazo por correo ya registrado",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Ya existe un empleado registrado con el correo carlos.ruiz@empresa.com"
+      ],
+      "pasos": [
+        "Abrir el formulario de alta de empleado",
+        "Completar el campo 'empleado-nombre' con 'Carlos Ruiz'",
+        "Completar el campo 'empleado-correo' con 'CARLOS.RUIZ@EMPRESA.COM'",
+        "Completar el campo 'empleado-puesto' con 'Vendedor'",
+        "Seleccionar 'Ventas' en 'empleado-departamento'",
+        "Completar el campo 'empleado-fecha-ingreso' con '2024-03-10'",
+        "Hacer clic en 'empleado-guardar'",
+        "Verificar el texto del elemento 'mensaje-error'",
+        "Verificar que la tabla 'tabla-empleados' no agregó una nueva fila"
+      ],
+      "datos": {
+        "nombre": "Carlos Ruiz",
+        "correo": "CARLOS.RUIZ@EMPRESA.COM",
+        "puesto": "Vendedor",
+        "departamento": "Ventas",
+        "fecha_ingreso": "2024-03-10"
+      },
+      "resultado_esperado": "La pantalla muestra en 'mensaje-error' el texto 'El correo ya está registrado' y no se crea un nuevo empleado"
+    },
+    {
+      "id": "CP-05",
+      "escenario": "Rechazo por correo que no es corporativo",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con el correo luis.gomez@gmail.com"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'Luis Gómez', correo 'luis.gomez@gmail.com', puesto 'Contador', departamento 'Finanzas' y fecha_ingreso '2024-02-15'",
+        "Verificar el código de respuesta",
+        "Verificar el mensaje de error en el cuerpo de la respuesta",
+        "Consultar GET /api/empleados para confirmar que no se creó un nuevo registro"
+      ],
+      "datos": {
+        "nombre": "Luis Gómez",
+        "correo": "luis.gomez@gmail.com",
+        "puesto": "Contador",
+        "departamento": "Finanzas",
+        "fecha_ingreso": "2024-02-15"
+      },
+      "resultado_esperado": "Responde 422 con detail 'Usa el correo corporativo @empresa.com' y no se crea un nuevo empleado"
+    },
+    {
+      "id": "CP-06",
+      "escenario": "Rechazo por correo que no es corporativo",
+      "nivel": "e2e",
+      "precondiciones": [
+        "No existe ningún empleado con el correo luis.gomez@gmail.com"
+      ],
+      "pasos": [
+        "Abrir el formulario de alta de empleado",
+        "Completar el campo 'empleado-nombre' con 'Luis Gómez'",
+        "Completar el campo 'empleado-correo' con 'luis.gomez@gmail.com'",
+        "Completar el campo 'empleado-puesto' con 'Contador'",
+        "Seleccionar 'Finanzas' en 'empleado-departamento'",
+        "Completar el campo 'empleado-fecha-ingreso' con '2024-02-15'",
+        "Hacer clic en 'empleado-guardar'",
+        "Verificar el texto del elemento 'mensaje-error'"
+      ],
+      "datos": {
+        "nombre": "Luis Gómez",
+        "correo": "luis.gomez@gmail.com",
+        "puesto": "Contador",
+        "departamento": "Finanzas",
+        "fecha_ingreso": "2024-02-15"
+      },
+      "resultado_esperado": "La pantalla muestra en 'mensaje-error' el texto 'Usa el correo corporativo @empresa.com' y no se crea un nuevo empleado"
+    },
+    {
+      "id": "CP-07",
+      "escenario": "Rechazo por nombre que no cumple la longitud mínima",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con el correo a@empresa.com"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'A', correo 'a@empresa.com', puesto 'Operario', departamento 'Operaciones' y fecha_ingreso '2024-01-20'",
+        "Verificar el código de respuesta",
+        "Verificar que el error indica el campo 'nombre'",
+        "Consultar GET /api/empleados para confirmar que no se creó un nuevo registro"
+      ],
+      "datos": {
+        "nombre": "A",
+        "correo": "a@empresa.com",
+        "puesto": "Operario",
+        "departamento": "Operaciones",
+        "fecha_ingreso": "2024-01-20"
+      },
+      "resultado_esperado": "Responde 422 indicando que el campo 'nombre' debe corregirse y no se crea un nuevo empleado"
+    },
+    {
+      "id": "CP-08",
+      "escenario": "Rechazo por nombre que no cumple la longitud mínima",
+      "nivel": "e2e",
+      "precondiciones": [
+        "No existe ningún empleado con el correo a@empresa.com"
+      ],
+      "pasos": [
+        "Abrir el formulario de alta de empleado",
+        "Completar el campo 'empleado-nombre' con 'A'",
+        "Completar el campo 'empleado-correo' con 'a@empresa.com'",
+        "Completar el campo 'empleado-puesto' con 'Operario'",
+        "Seleccionar 'Operaciones' en 'empleado-departamento'",
+        "Completar el campo 'empleado-fecha-ingreso' con '2024-01-20'",
+        "Hacer clic en 'empleado-guardar'",
+        "Verificar que el campo 'empleado-nombre' muestra una indicación de error",
+        "Verificar el texto del elemento 'mensaje-error'"
+      ],
+      "datos": {
+        "nombre": "A",
+        "correo": "a@empresa.com",
+        "puesto": "Operario",
+        "departamento": "Operaciones",
+        "fecha_ingreso": "2024-01-20"
+      },
+      "resultado_esperado": "La pantalla indica que el campo 'empleado-nombre' debe corregirse y no se crea un nuevo empleado"
+    },
+    {
+      "id": "CP-09",
+      "escenario": "Rechazo por fecha de ingreso futura",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con el correo maria.lopez@empresa.com",
+        "La fecha actual del sistema es 2024-06-01"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'María López', correo 'maria.lopez@empresa.com', puesto 'Desarrolladora', departamento 'Tecnología' y fecha_ingreso '2024-06-02'",
+        "Verificar el código de respuesta",
+        "Verificar el mensaje de error en el cuerpo de la respuesta",
+        "Consultar GET /api/empleados para confirmar que no se creó un nuevo registro"
+      ],
+      "datos": {
+        "nombre": "María López",
+        "correo": "maria.lopez@empresa.com",
+        "puesto": "Desarrolladora",
+        "departamento": "Tecnología",
+        "fecha_ingreso": "2024-06-02",
+        "fecha_actual": "2024-06-01"
+      },
+      "resultado_esperado": "Responde 422 con detail 'La fecha de ingreso no puede ser futura' y no se crea un nuevo empleado"
+    },
+    {
+      "id": "CP-10",
+      "escenario": "Rechazo por fecha de ingreso futura",
+      "nivel": "e2e",
+      "precondiciones": [
+        "No existe ningún empleado con el correo maria.lopez@empresa.com",
+        "La fecha actual del sistema es 2024-06-01"
+      ],
+      "pasos": [
+        "Abrir el formulario de alta de empleado",
+        "Completar el campo 'empleado-nombre' con 'María López'",
+        "Completar el campo 'empleado-correo' con 'maria.lopez@empresa.com'",
+        "Completar el campo 'empleado-puesto' con 'Desarrolladora'",
+        "Seleccionar 'Tecnología' en 'empleado-departamento'",
+        "Completar el campo 'empleado-fecha-ingreso' con '2024-06-02'",
+        "Hacer clic en 'empleado-guardar'",
+        "Verificar el texto del elemento 'mensaje-error'"
+      ],
+      "datos": {
+        "nombre": "María López",
+        "correo": "maria.lopez@empresa.com",
+        "puesto": "Desarrolladora",
+        "departamento": "Tecnología",
+        "fecha_ingreso": "2024-06-02",
+        "fecha_actual": "2024-06-01"
+      },
+      "resultado_esperado": "La pantalla muestra en 'mensaje-error' el texto 'La fecha de ingreso no puede ser futura' y no se crea un nuevo empleado"
+    }
+  ]
+}
