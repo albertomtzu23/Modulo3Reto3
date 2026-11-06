@@ -6,207 +6,235 @@
       "escenario": "Editar puesto y departamento de un empleado activo",
       "nivel": "api",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010, correo ana.lopez@empresa.com, puesto Analista y departamento Finanzas"
+        "Existe un empleado activo con id 1, número de empleado \"EMP-0001\", correo \"ana.lopez@empresa.com\", puesto \"Analista\" y departamento \"Ventas\""
       ],
       "pasos": [
-        "Enviar PUT /api/empleados/EMP-0010 con body {\"puesto\": \"Analista Senior\", \"departamento\": \"Tecnología\"}"
+        "Enviar PUT /api/empleados/1 con body {\"puesto\": \"Analista Senior\", \"departamento\": \"Finanzas\"}",
+        "Enviar GET /api/empleados/1 para verificar los datos actualizados"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
+        "id": "1",
         "puesto": "Analista Senior",
-        "departamento": "Tecnología"
+        "departamento": "Finanzas"
       },
-      "resultado_esperado": "La respuesta tiene código 200; el empleado EMP-0010 queda con puesto 'Analista Senior' y departamento 'Tecnología'; numero_empleado sigue siendo 'EMP-0010' y correo sigue siendo 'ana.lopez@empresa.com'"
+      "resultado_esperado": "La API responde 200 y el empleado con id 1 tiene puesto \"Analista Senior\" y departamento \"Finanzas\""
     },
     {
       "id": "CP-02",
       "escenario": "Editar puesto y departamento de un empleado activo",
       "nivel": "e2e",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010, correo ana.lopez@empresa.com, puesto Analista y departamento Finanzas, visible en tabla-empleados"
+        "El empleado con id 1 está activo y visible en tabla-empleados con puesto \"Analista\" y departamento \"Ventas\""
       ],
       "pasos": [
-        "En tabla-empleados localizar la fila con numero-empleado-{id} igual a EMP-0010 y hacer clic en editar-empleado-{id}",
-        "En el campo empleado-puesto escribir 'Analista Senior'",
-        "En el campo empleado-departamento seleccionar 'Tecnología'",
-        "Hacer clic en empleado-guardar"
+        "Hacer clic en editar-empleado-1",
+        "Completar el campo empleado-puesto con \"Analista Senior\"",
+        "Completar el campo empleado-departamento con \"Finanzas\"",
+        "Hacer clic en empleado-guardar",
+        "Verificar que se muestra el mensaje en mensaje-exito"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
+        "id": "1",
         "puesto": "Analista Senior",
-        "departamento": "Tecnología"
+        "departamento": "Finanzas"
       },
-      "resultado_esperado": "Se muestra mensaje-exito; la fila fila-empleado-{id} de EMP-0010 refleja puesto 'Analista Senior' y departamento 'Tecnología'; numero-empleado-{id} sigue mostrando EMP-0010"
+      "resultado_esperado": "Se muestra el mensaje en \"mensaje-exito\""
     },
     {
       "id": "CP-03",
-      "escenario": "Error al editar con un departamento que no está en la lista permitida",
+      "escenario": "El correo y el número de empleado no se modifican aunque se intenten editar",
       "nivel": "api",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010, correo ana.lopez@empresa.com, puesto Analista y departamento Finanzas"
+        "Existe un empleado activo con id 2, número de empleado \"EMP-0002\" y correo \"carlos.ruiz@empresa.com\""
       ],
       "pasos": [
-        "Enviar PUT /api/empleados/EMP-0010 con body {\"departamento\": \"Marketing\"}"
+        "Enviar PUT /api/empleados/2 con body {\"numero_empleado\": \"EMP-9999\", \"correo\": \"otro@empresa.com\"}",
+        "Enviar GET /api/empleados/2 para verificar que no cambiaron esos campos"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
-        "departamento": "Marketing"
+        "id": "2",
+        "numero_empleado_enviado": "EMP-9999",
+        "correo_enviado": "otro@empresa.com"
       },
-      "resultado_esperado": "La respuesta tiene código 422 con detail indicando que el campo departamento debe corregirse"
+      "resultado_esperado": "La API responde 200 y el empleado con id 2 conserva el número de empleado \"EMP-0002\" y el correo \"carlos.ruiz@empresa.com\""
     },
     {
       "id": "CP-04",
-      "escenario": "Error al editar con un departamento que no está en la lista permitida",
-      "nivel": "e2e",
+      "escenario": "Rechazar la edición cuando el puesto queda fuera del rango permitido",
+      "nivel": "api",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010, correo ana.lopez@empresa.com, puesto Analista y departamento Finanzas, visible en tabla-empleados"
+        "Existe un empleado activo con id 3 y puesto \"Gerente\""
       ],
       "pasos": [
-        "En tabla-empleados hacer clic en editar-empleado-{id} de la fila de EMP-0010",
-        "En el campo empleado-departamento escribir 'Marketing'",
-        "Hacer clic en empleado-guardar"
+        "Enviar PUT /api/empleados/3 con body {\"puesto\": \"A\"}"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
-        "departamento": "Marketing"
+        "id": "3",
+        "puesto": "A"
       },
-      "resultado_esperado": "Se muestra mensaje-error indicando que el campo empleado-departamento debe corregirse y los cambios no se guardan"
+      "resultado_esperado": "La API responde 422"
     },
     {
       "id": "CP-05",
-      "escenario": "Error al editar con un puesto demasiado corto",
-      "nivel": "api",
+      "escenario": "Rechazar la edición cuando el puesto queda fuera del rango permitido",
+      "nivel": "e2e",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010, correo ana.lopez@empresa.com, puesto Analista y departamento Finanzas"
+        "El empleado con id 3 está activo y visible en tabla-empleados con puesto \"Gerente\""
       ],
       "pasos": [
-        "Enviar PUT /api/empleados/EMP-0010 con body {\"puesto\": \"A\"}"
+        "Hacer clic en editar-empleado-3",
+        "Completar el campo empleado-puesto con \"A\"",
+        "Hacer clic en empleado-guardar",
+        "Verificar que la pantalla muestra el campo empleado-puesto para corregir"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
+        "id": "3",
         "puesto": "A"
       },
-      "resultado_esperado": "La respuesta tiene código 422 con detail indicando que el campo puesto debe corregirse"
+      "resultado_esperado": "La pantalla muestra el campo \"puesto\" para corregir"
     },
     {
       "id": "CP-06",
-      "escenario": "Error al editar con un puesto demasiado corto",
-      "nivel": "e2e",
+      "escenario": "Rechazar la edición cuando el departamento no es uno de los catálogos válidos",
+      "nivel": "api",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010, correo ana.lopez@empresa.com, puesto Analista y departamento Finanzas, visible en tabla-empleados"
+        "Existe un empleado activo con id 4 y departamento \"Tecnología\""
       ],
       "pasos": [
-        "En tabla-empleados hacer clic en editar-empleado-{id} de la fila de EMP-0010",
-        "En el campo empleado-puesto escribir 'A'",
-        "Hacer clic en empleado-guardar"
+        "Enviar PUT /api/empleados/4 con body {\"departamento\": \"Mercadotecnia\"}"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
-        "puesto": "A"
+        "id": "4",
+        "departamento": "Mercadotecnia"
       },
-      "resultado_esperado": "Se muestra mensaje-error indicando que el campo empleado-puesto debe corregirse y los cambios no se guardan"
+      "resultado_esperado": "La API responde 422"
     },
     {
       "id": "CP-07",
-      "escenario": "Error al intentar editar a un empleado dado de baja",
-      "nivel": "api",
+      "escenario": "Rechazar la edición cuando el departamento no es uno de los catálogos válidos",
+      "nivel": "e2e",
       "precondiciones": [
-        "Existe un empleado con numero_empleado EMP-0010 en estado baja"
+        "El empleado con id 4 está activo y visible en tabla-empleados con departamento \"Tecnología\""
       ],
       "pasos": [
-        "Enviar PUT /api/empleados/EMP-0010 con body {\"puesto\": \"Analista Senior\"}"
+        "Hacer clic en editar-empleado-4",
+        "Completar el campo empleado-departamento con \"Mercadotecnia\"",
+        "Hacer clic en empleado-guardar",
+        "Verificar que la pantalla muestra el campo empleado-departamento para corregir"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
-        "puesto": "Analista Senior"
+        "id": "4",
+        "departamento": "Mercadotecnia"
       },
-      "resultado_esperado": "La respuesta tiene código 409 con detail 'No se puede editar a un empleado dado de baja'"
+      "resultado_esperado": "La pantalla muestra el campo \"departamento\" para corregir"
     },
     {
       "id": "CP-08",
-      "escenario": "Error al intentar editar a un empleado dado de baja",
-      "nivel": "e2e",
+      "escenario": "Dar de baja a un empleado activo con fecha de baja igual a la fecha de ingreso (límite: primer día válido)",
+      "nivel": "api",
       "precondiciones": [
-        "Existe un empleado con numero_empleado EMP-0010 en estado baja, visible en tabla-empleados con estado-empleado-{id} igual a 'Baja'"
+        "Existe un empleado activo con id 5 y fecha_ingreso \"2024-01-10\""
       ],
       "pasos": [
-        "En tabla-empleados hacer clic en editar-empleado-{id} de la fila de EMP-0010",
-        "En el campo empleado-puesto escribir 'Analista Senior'",
-        "Hacer clic en empleado-guardar"
+        "Enviar la solicitud de baja para el empleado 5 con fecha_baja \"2024-01-10\"",
+        "Enviar GET /api/empleados/5 para verificar el estado y la fecha_baja"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
-        "puesto": "Analista Senior"
+        "id": "5",
+        "fecha_ingreso": "2024-01-10",
+        "fecha_baja": "2024-01-10"
       },
-      "resultado_esperado": "Se muestra mensaje-error con el texto 'No se puede editar a un empleado dado de baja' y los cambios no se guardan"
+      "resultado_esperado": "La API responde 200 y el empleado con id 5 tiene estado \"baja\" y fecha_baja \"2024-01-10\""
     },
     {
       "id": "CP-09",
-      "escenario": "Dar de baja a un empleado activo",
-      "nivel": "api",
+      "escenario": "Dar de baja a un empleado activo con fecha de baja igual a la fecha de ingreso (límite: primer día válido)",
+      "nivel": "e2e",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010 y fecha_ingreso 2020-03-01"
+        "El empleado con id 5 está activo y visible en tabla-empleados con fecha_ingreso \"2024-01-10\""
       ],
       "pasos": [
-        "Enviar POST /api/empleados/EMP-0010/baja con body {\"fecha_baja\": \"2024-06-15\"}"
+        "Hacer clic en baja-empleado-5",
+        "Completar el campo empleado-fecha-baja con \"2024-01-10\"",
+        "Hacer clic en confirmar-baja",
+        "Verificar que en tabla-empleados la fila fila-empleado-5 muestra \"Baja\" en estado-empleado-5"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
-        "fecha_baja": "2024-06-15"
+        "id": "5",
+        "fecha_baja": "2024-01-10"
       },
-      "resultado_esperado": "La respuesta tiene código 200; el empleado EMP-0010 queda con estado 'baja' y fecha_baja '2024-06-15'; sigue apareciendo al consultar GET /api/empleados"
+      "resultado_esperado": "El empleado sigue apareciendo en \"tabla-empleados\" con estado \"Baja\" en \"estado-empleado-5\""
     },
     {
       "id": "CP-10",
-      "escenario": "Dar de baja a un empleado activo",
-      "nivel": "e2e",
+      "escenario": "Rechazar la baja cuando la fecha de baja es anterior a la fecha de ingreso",
+      "nivel": "api",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010 y fecha_ingreso 2020-03-01, visible en tabla-empleados"
+        "Existe un empleado activo con id 6 y fecha_ingreso \"2024-01-10\""
       ],
       "pasos": [
-        "En tabla-empleados hacer clic en baja-empleado-{id} de la fila de EMP-0010",
-        "En el campo empleado-fecha-baja escribir '2024-06-15'",
-        "Hacer clic en confirmar-baja"
+        "Enviar la solicitud de baja para el empleado 6 con fecha_baja \"2024-01-09\""
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
-        "fecha_baja": "2024-06-15"
+        "id": "6",
+        "fecha_ingreso": "2024-01-10",
+        "fecha_baja": "2024-01-09"
       },
-      "resultado_esperado": "Se muestra mensaje-exito; estado-empleado-{id} de EMP-0010 muestra 'Baja' y la fila sigue visible en tabla-empleados"
+      "resultado_esperado": "La API responde 422"
     },
     {
       "id": "CP-11",
-      "escenario": "Error al dar de baja con una fecha de baja anterior a la fecha de ingreso",
-      "nivel": "api",
+      "escenario": "Rechazar la baja cuando la fecha de baja es anterior a la fecha de ingreso",
+      "nivel": "e2e",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010 y fecha_ingreso 2020-03-01"
+        "El empleado con id 6 está activo y visible en tabla-empleados con fecha_ingreso \"2024-01-10\""
       ],
       "pasos": [
-        "Enviar POST /api/empleados/EMP-0010/baja con body {\"fecha_baja\": \"2019-01-10\"}"
+        "Hacer clic en baja-empleado-6",
+        "Completar el campo empleado-fecha-baja con \"2024-01-09\"",
+        "Hacer clic en confirmar-baja",
+        "Verificar que la pantalla muestra el campo empleado-fecha-baja para corregir"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
-        "fecha_baja": "2019-01-10"
+        "id": "6",
+        "fecha_baja": "2024-01-09"
       },
-      "resultado_esperado": "La respuesta tiene código 422 con detail indicando que el campo fecha_baja debe corregirse"
+      "resultado_esperado": "La pantalla muestra el campo \"fecha_baja\" para corregir"
     },
     {
       "id": "CP-12",
-      "escenario": "Error al dar de baja con una fecha de baja anterior a la fecha de ingreso",
-      "nivel": "e2e",
+      "escenario": "Rechazar la edición de un empleado que ya está dado de baja",
+      "nivel": "api",
       "precondiciones": [
-        "Existe un empleado activo con numero_empleado EMP-0010 y fecha_ingreso 2020-03-01, visible en tabla-empleados"
+        "Existe un empleado dado de baja con id 7"
       ],
       "pasos": [
-        "En tabla-empleados hacer clic en baja-empleado-{id} de la fila de EMP-0010",
-        "En el campo empleado-fecha-baja escribir '2019-01-10'",
-        "Hacer clic en confirmar-baja"
+        "Enviar PUT /api/empleados/7 con body {\"puesto\": \"Supervisor\"}"
       ],
       "datos": {
-        "numero_empleado": "EMP-0010",
-        "fecha_baja": "2019-01-10"
+        "id": "7",
+        "puesto": "Supervisor"
       },
-      "resultado_esperado": "Se muestra mensaje-error indicando que el campo empleado-fecha-baja debe corregirse y la baja no se confirma"
+      "resultado_esperado": "La API responde 409 y el mensaje de error es \"No se puede editar a un empleado dado de baja\""
+    },
+    {
+      "id": "CP-13",
+      "escenario": "Rechazar la edición de un empleado que ya está dado de baja",
+      "nivel": "e2e",
+      "precondiciones": [
+        "El empleado con id 7 está dado de baja y visible en tabla-empleados"
+      ],
+      "pasos": [
+        "Hacer clic en editar-empleado-7",
+        "Completar el campo empleado-puesto con \"Supervisor\"",
+        "Hacer clic en empleado-guardar",
+        "Verificar que se muestra el mensaje en mensaje-error"
+      ],
+      "datos": {
+        "id": "7",
+        "puesto": "Supervisor"
+      },
+      "resultado_esperado": "El mensaje de error es \"No se puede editar a un empleado dado de baja\""
     }
   ]
 }

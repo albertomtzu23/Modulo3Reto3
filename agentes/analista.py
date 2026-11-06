@@ -12,13 +12,28 @@ SISTEMA = """Eres analista de producto en un equipo de software. Conviertes hist
 en criterios de aceptación escritos en Gherkin, en español.
 
 Cómo trabajas:
-1. Lee la historia y el archivo contexto/reglas_negocio.md.
+1. Lee la historia, contexto/reglas_negocio.md y contexto/convenciones_app.md.
 2. Escribe {destino}. La primera línea es `# language: es` y usas las palabras clave
    Característica, Escenario, Dado, Cuando, Entonces, Y.
 3. Incluye el camino feliz y un escenario de error por cada regla de negocio que aplique a ESTA historia.
+   Si el contexto define mensajes de error exactos, escribe un escenario por cada uno y cópialo letra por letra,
+   con un número concreto en lugar de N. Cubre los límites: el primer día válido y usar justo lo que queda.
 4. Cada escenario se puede verificar desde la pantalla o la API: datos concretos, nada de «funciona bien».
 5. No inventes reglas. Si falta información, agrégala al final como comentarios bajo `# Preguntas abiertas`.
 6. Responde al final con una sola línea: cuántos escenarios escribiste."""
+
+
+# Historias con una tabla de errores que los criterios deben citar textualmente
+CONTRATOS = {"HU-10": RAIZ / "contexto" / "convenciones_vacaciones.md"}
+
+
+def mensajes_exactos(hu: str) -> list[str]:
+    """Mensajes de la tabla de errores del contrato de la historia; vacío si no tiene contrato."""
+    contrato = CONTRATOS.get(hu)
+    if not contrato or not contrato.exists():
+        return []
+    seccion = contrato.read_text(encoding="utf-8").split("## Errores: mensajes exactos", 1)[-1].split("\n## ", 1)[0]
+    return re.findall(r"^\|[^|]*\|\s*\d{3}\s*\|\s*`([^`]+)`\s*\|", seccion, flags=re.MULTILINE)
 
 
 def escenarios(gherkin: str) -> list[str]:
@@ -32,7 +47,7 @@ def preguntas_abiertas(gherkin: str) -> list[str]:
     return [l.lstrip("# -").strip() for l in bloque.splitlines() if l.strip().lstrip("#").strip()]
 
 
-def validar_gherkin(texto: str) -> list[str]:
+def validar_gherkin(texto: str, mensajes: list[str] | None = None) -> list[str]:
     """Evaluador determinista: devuelve los problemas encontrados; vacío = válido."""
     problemas = []
     if not texto.lstrip().startswith("# language: es"):
@@ -46,18 +61,23 @@ def validar_gherkin(texto: str) -> list[str]:
         for clave in ("Dado", "Cuando", "Entonces"):
             if not re.search(rf"^\s*{clave}\b", bloque, flags=re.MULTILINE):
                 problemas.append(f"El escenario {i} no tiene '{clave}'.")
+    for mensaje in mensajes or []:
+        patron = r"\d+".join(re.escape(parte) for parte in re.split(r"\bN\b", mensaje))  # N es un número
+        if not re.search(patron, texto):
+            problemas.append(f"Falta un escenario con el mensaje exacto: {mensaje}")
     return problemas
 
 
-def generar_criterios(historia: Path, max_intentos: int = 2) -> Path:
+def generar_criterios(historia: Path, max_intentos: int = 3) -> Path:
     carpeta = SALIDA / hu_de(historia)
     destino = carpeta / "criterios.feature"
     herramientas = herramientas_archivos(lectura=[RAIZ / "historias", RAIZ / "contexto"], escritura=carpeta)
     tarea = f"Historia de usuario: {rel(historia)}"
+    mensajes = mensajes_exactos(hu_de(historia))
     for intento in range(1, max_intentos + 1):
         print(f"Analista · intento {intento}")
         ejecutar_agente(SISTEMA.format(destino=rel(destino)), herramientas, tarea, nombre="analista")
-        problemas = validar_gherkin(destino.read_text(encoding="utf-8")) if destino.exists() \
+        problemas = validar_gherkin(destino.read_text(encoding="utf-8"), mensajes) if destino.exists() \
             else [f"No se escribió {rel(destino)}."]
         if not problemas:
             return destino

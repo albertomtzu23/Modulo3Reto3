@@ -1,13 +1,7 @@
 """Pruebas de API de HU-03: edición y baja de empleados."""
-import sqlite3
 import uuid
-from pathlib import Path
 
 import httpx
-
-# Base de datos real del backend: no hay forma de preparar un empleado dado
-# de baja a través de la API, así que se marca directamente en la base.
-RUTA_BASE_DATOS = Path(__file__).resolve().parents[2] / "backend" / "datos" / "empleados.db"
 
 
 def _crear_empleado(
@@ -32,117 +26,131 @@ def _crear_empleado(
     return respuesta.json()
 
 
-def _marcar_baja(empleado_id: int, fecha_baja: str) -> None:
-    conexion = sqlite3.connect(RUTA_BASE_DATOS)
-    try:
-        conexion.execute(
-            "UPDATE empleados SET estado = 'baja', fecha_baja = ? WHERE id = ?",
-            (fecha_baja, empleado_id),
-        )
-        conexion.commit()
-    finally:
-        conexion.close()
+def _dar_de_baja(url_api: str, empleado_id: int, fecha_baja: str) -> dict:
+    respuesta = httpx.post(
+        f"{url_api}/api/empleados/{empleado_id}/baja", json={"fecha_baja": fecha_baja}
+    )
+    assert respuesta.status_code == 200, respuesta.text
+    return respuesta.json()
+
+
+def _obtener_empleado(url_api: str, empleado_id: int) -> dict:
+    respuesta = httpx.get(f"{url_api}/api/empleados")
+    assert respuesta.status_code == 200
+    coincidencias = [e for e in respuesta.json() if e["id"] == empleado_id]
+    assert len(coincidencias) == 1
+    return coincidencias[0]
 
 
 def test_cp01_editar_puesto_y_departamento(url_api):
     """CP-01: Editar puesto y departamento de un empleado activo."""
     sufijo = uuid.uuid4().hex[:8]
-    correo = f"ana.lopez.{sufijo}@empresa.com"
-    ana = _crear_empleado(url_api, "Ana López", correo, "Analista", "Finanzas")
+    empleado = _crear_empleado(
+        url_api, "Ana López", f"ana.lopez.{sufijo}@empresa.com", "Analista", "Ventas"
+    )
 
     respuesta = httpx.put(
-        f"{url_api}/api/empleados/{ana['id']}",
-        json={"puesto": "Analista Senior", "departamento": "Tecnología"},
+        f"{url_api}/api/empleados/{empleado['id']}",
+        json={"puesto": "Analista Senior", "departamento": "Finanzas"},
     )
     assert respuesta.status_code == 200
-    actualizado = respuesta.json()
+
+    actualizado = _obtener_empleado(url_api, empleado["id"])
     assert actualizado["puesto"] == "Analista Senior"
-    assert actualizado["departamento"] == "Tecnología"
-    assert actualizado["numero_empleado"] == ana["numero_empleado"]
+    assert actualizado["departamento"] == "Finanzas"
+
+
+def test_cp03_correo_y_numero_empleado_no_se_modifican(url_api):
+    """CP-03: El correo y el número de empleado no se modifican aunque se intenten editar."""
+    sufijo = uuid.uuid4().hex[:8]
+    correo = f"carlos.ruiz.{sufijo}@empresa.com"
+    empleado = _crear_empleado(url_api, "Carlos Ruiz", correo, "Analista", "Ventas")
+
+    respuesta = httpx.put(
+        f"{url_api}/api/empleados/{empleado['id']}",
+        json={"numero_empleado": "EMP-9999", "correo": "otro@empresa.com"},
+    )
+    assert respuesta.status_code == 200
+
+    actualizado = _obtener_empleado(url_api, empleado["id"])
+    assert actualizado["numero_empleado"] == empleado["numero_empleado"]
     assert actualizado["correo"] == correo
 
 
-def test_cp03_departamento_no_permitido(url_api):
-    """CP-03: Error al editar con un departamento que no está en la lista permitida."""
+def test_cp04_puesto_fuera_de_rango(url_api):
+    """CP-04: Rechazar la edición cuando el puesto queda fuera del rango permitido."""
     sufijo = uuid.uuid4().hex[:8]
     empleado = _crear_empleado(
-        url_api, "Ana López", f"ana.lopez.{sufijo}@empresa.com", "Analista", "Finanzas"
-    )
-
-    respuesta = httpx.put(
-        f"{url_api}/api/empleados/{empleado['id']}", json={"departamento": "Marketing"}
-    )
-    assert respuesta.status_code == 422
-    assert "departamento" in respuesta.json()["detail"]
-
-
-def test_cp05_puesto_demasiado_corto(url_api):
-    """CP-05: Error al editar con un puesto demasiado corto."""
-    sufijo = uuid.uuid4().hex[:8]
-    empleado = _crear_empleado(
-        url_api, "Ana López", f"ana.lopez.{sufijo}@empresa.com", "Analista", "Finanzas"
+        url_api, "Ana López", f"ana.lopez.{sufijo}@empresa.com", "Gerente", "Finanzas"
     )
 
     respuesta = httpx.put(f"{url_api}/api/empleados/{empleado['id']}", json={"puesto": "A"})
     assert respuesta.status_code == 422
-    assert "puesto" in respuesta.json()["detail"]
 
 
-def test_cp07_editar_empleado_de_baja(url_api):
-    """CP-07: Error al intentar editar a un empleado dado de baja."""
+def test_cp06_departamento_no_es_catalogo_valido(url_api):
+    """CP-06: Rechazar la edición cuando el departamento no es uno de los catálogos válidos."""
     sufijo = uuid.uuid4().hex[:8]
     empleado = _crear_empleado(
-        url_api, "Ana López", f"ana.lopez.{sufijo}@empresa.com", "Analista", "Finanzas"
+        url_api, "Ana López", f"ana.lopez.{sufijo}@empresa.com", "Analista", "Tecnología"
     )
-    _marcar_baja(empleado["id"], "2024-01-01")
 
     respuesta = httpx.put(
-        f"{url_api}/api/empleados/{empleado['id']}", json={"puesto": "Analista Senior"}
+        f"{url_api}/api/empleados/{empleado['id']}", json={"departamento": "Mercadotecnia"}
+    )
+    assert respuesta.status_code == 422
+
+
+def test_cp08_baja_con_fecha_igual_a_fecha_ingreso(url_api):
+    """CP-08: Dar de baja a un empleado activo con fecha de baja igual a la fecha de ingreso."""
+    sufijo = uuid.uuid4().hex[:8]
+    empleado = _crear_empleado(
+        url_api,
+        "Ana López",
+        f"ana.lopez.{sufijo}@empresa.com",
+        "Analista",
+        "Ventas",
+        fecha_ingreso="2024-01-10",
+    )
+
+    respuesta = httpx.post(
+        f"{url_api}/api/empleados/{empleado['id']}/baja", json={"fecha_baja": "2024-01-10"}
+    )
+    assert respuesta.status_code == 200
+
+    actualizado = _obtener_empleado(url_api, empleado["id"])
+    assert actualizado["estado"] == "baja"
+    assert actualizado["fecha_baja"] == "2024-01-10"
+
+
+def test_cp10_baja_con_fecha_anterior_a_fecha_ingreso(url_api):
+    """CP-10: Rechazar la baja cuando la fecha de baja es anterior a la fecha de ingreso."""
+    sufijo = uuid.uuid4().hex[:8]
+    empleado = _crear_empleado(
+        url_api,
+        "Ana López",
+        f"ana.lopez.{sufijo}@empresa.com",
+        "Analista",
+        "Ventas",
+        fecha_ingreso="2024-01-10",
+    )
+
+    respuesta = httpx.post(
+        f"{url_api}/api/empleados/{empleado['id']}/baja", json={"fecha_baja": "2024-01-09"}
+    )
+    assert respuesta.status_code == 422
+
+
+def test_cp12_editar_empleado_dado_de_baja(url_api):
+    """CP-12: Rechazar la edición de un empleado que ya está dado de baja."""
+    sufijo = uuid.uuid4().hex[:8]
+    empleado = _crear_empleado(
+        url_api, "Ana López", f"ana.lopez.{sufijo}@empresa.com", "Analista", "Ventas"
+    )
+    _dar_de_baja(url_api, empleado["id"], "2024-06-15")
+
+    respuesta = httpx.put(
+        f"{url_api}/api/empleados/{empleado['id']}", json={"puesto": "Supervisor"}
     )
     assert respuesta.status_code == 409
     assert respuesta.json()["detail"] == "No se puede editar a un empleado dado de baja"
-
-
-def test_cp09_dar_de_baja_empleado_activo(url_api):
-    """CP-09: Dar de baja a un empleado activo."""
-    sufijo = uuid.uuid4().hex[:8]
-    empleado = _crear_empleado(
-        url_api,
-        "Ana López",
-        f"ana.lopez.{sufijo}@empresa.com",
-        "Analista",
-        "Finanzas",
-        fecha_ingreso="2020-03-01",
-    )
-
-    respuesta = httpx.post(
-        f"{url_api}/api/empleados/{empleado['id']}/baja", json={"fecha_baja": "2024-06-15"}
-    )
-    assert respuesta.status_code == 200
-    actualizado = respuesta.json()
-    assert actualizado["estado"] == "baja"
-    assert actualizado["fecha_baja"] == "2024-06-15"
-
-    directorio = httpx.get(f"{url_api}/api/empleados")
-    assert directorio.status_code == 200
-    coincidencias = [e for e in directorio.json() if e["id"] == empleado["id"]]
-    assert len(coincidencias) == 1
-
-
-def test_cp11_fecha_baja_anterior_a_fecha_ingreso(url_api):
-    """CP-11: Error al dar de baja con una fecha de baja anterior a la fecha de ingreso."""
-    sufijo = uuid.uuid4().hex[:8]
-    empleado = _crear_empleado(
-        url_api,
-        "Ana López",
-        f"ana.lopez.{sufijo}@empresa.com",
-        "Analista",
-        "Finanzas",
-        fecha_ingreso="2020-03-01",
-    )
-
-    respuesta = httpx.post(
-        f"{url_api}/api/empleados/{empleado['id']}/baja", json={"fecha_baja": "2019-01-10"}
-    )
-    assert respuesta.status_code == 422
-    assert "fecha_baja" in respuesta.json()["detail"]

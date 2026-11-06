@@ -1,6 +1,7 @@
 """Sesión 3 · Agente 5, automatizador: casos de prueba -> pruebas con pytest y Playwright.
 
 Uso:  python -m agentes.automatizador HU-01
+      python -m agentes.automatizador HU-01 "prueba que falla y por qué"
 """
 import sys
 
@@ -26,6 +27,10 @@ Reglas:
   usando page.get_by_test_id(...) con los data-testid de CLAUDE.md.
 - Un test por caso; su docstring empieza con el id del caso (por ejemplo "CP-03: ...").
 - Cada test crea sus propios datos con correos únicos (uuid) para poder repetirse sin choques.
+- Crea un empleado nuevo por test para que los saldos no se mezclen. Su fecha_ingreso nunca es futura:
+  elige fechas pasadas que permitan probar el caso, incluida la antigüedad.
+- Compara los mensajes de error con el texto exacto, no con una parte.
+- La pantalla carga datos después de abrir: antes de leer o contar filas, espera a que tus datos estén visibles.
 - Comprueba la sintaxis con `python -m pytest tests --collect-only -q`. No ejecutes las pruebas completas.
 Responde con la lista de archivos y cuántos tests escribiste."""
 
@@ -41,4 +46,4 @@ def automatizar(hu: str, errores: str = "") -> tuple[str, float]:
 
 
 if __name__ == "__main__":
-    print(automatizar(sys.argv[1])[0])
+    print(automatizar(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "")[0])

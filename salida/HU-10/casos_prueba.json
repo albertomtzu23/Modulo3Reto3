@@ -1,0 +1,465 @@
+{
+  "historia": "HU-10",
+  "casos": [
+    {
+      "id": "CP-01",
+      "escenario": "Camino feliz - una solicitud válida se registra y descuenta los días hábiles correctos",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 7, número EMP-0007 y fecha_ingreso 2018-03-01",
+        "El empleado no tiene solicitudes de vacaciones registradas en 2026"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/7/vacaciones con body {fecha_inicio: 2026-12-21, fecha_fin: 2026-12-31}"
+      ],
+      "datos": {
+        "empleado_id": "7",
+        "fecha_inicio": "2026-12-21",
+        "fecha_fin": "2026-12-31"
+      },
+      "resultado_esperado": "Código 201; el campo dias_habiles de la respuesta es 8; el campo dias_restantes de la respuesta es 4"
+    },
+    {
+      "id": "CP-02",
+      "escenario": "Camino feliz - una solicitud válida se registra y descuenta los días hábiles correctos",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 7, número EMP-0007 y fecha_ingreso 2018-03-01",
+        "El empleado no tiene solicitudes de vacaciones registradas en 2026"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-7",
+        "Escribir 2026-12-21 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2026-12-31 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "7",
+        "fecha_inicio": "2026-12-21",
+        "fecha_fin": "2026-12-31"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"Solicitud registrada: 8 días hábiles. Te quedan 4 días hábiles en 2026.\""
+    },
+    {
+      "id": "CP-03",
+      "escenario": "Los sábados, domingos y festivos dentro del periodo no se descuentan",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 8, número EMP-0008 y fecha_ingreso 2018-03-01",
+        "El empleado no tiene solicitudes de vacaciones registradas en 2026"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/8/vacaciones con body {fecha_inicio: 2026-09-14, fecha_fin: 2026-09-18}"
+      ],
+      "datos": {
+        "empleado_id": "8",
+        "fecha_inicio": "2026-09-14",
+        "fecha_fin": "2026-09-18"
+      },
+      "resultado_esperado": "Código 201; el campo dias_habiles de la respuesta es 4; el campo dias_restantes de la respuesta es 8"
+    },
+    {
+      "id": "CP-04",
+      "escenario": "Los sábados, domingos y festivos dentro del periodo no se descuentan",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 8, número EMP-0008 y fecha_ingreso 2018-03-01",
+        "El empleado no tiene solicitudes de vacaciones registradas en 2026"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-8",
+        "Escribir 2026-09-14 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2026-09-18 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "8",
+        "fecha_inicio": "2026-09-14",
+        "fecha_fin": "2026-09-18"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"Solicitud registrada: 4 días hábiles. Te quedan 8 días hábiles en 2026.\""
+    },
+    {
+      "id": "CP-05",
+      "escenario": "Error - el empleado no existe",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con id 999"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/999/vacaciones con body {fecha_inicio: 2026-07-06, fecha_fin: 2026-07-10}"
+      ],
+      "datos": {
+        "empleado_id": "999",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10"
+      },
+      "resultado_esperado": "Código 404; el campo detail de la respuesta es \"Empleado no encontrado\""
+    },
+    {
+      "id": "CP-06",
+      "escenario": "Error - el empleado está dado de baja",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado con id 9, número EMP-0009, fecha_ingreso 2018-03-01 y estado baja"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/9/vacaciones con body {fecha_inicio: 2026-07-06, fecha_fin: 2026-07-10}"
+      ],
+      "datos": {
+        "empleado_id": "9",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10"
+      },
+      "resultado_esperado": "Código 409; el campo detail de la respuesta es \"No se pueden solicitar vacaciones para un empleado dado de baja\""
+    },
+    {
+      "id": "CP-07",
+      "escenario": "Error - la fecha de fin es anterior a la fecha de inicio",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 10, número EMP-0010 y fecha_ingreso 2018-03-01"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/10/vacaciones con body {fecha_inicio: 2026-07-10, fecha_fin: 2026-07-06}"
+      ],
+      "datos": {
+        "empleado_id": "10",
+        "fecha_inicio": "2026-07-10",
+        "fecha_fin": "2026-07-06"
+      },
+      "resultado_esperado": "Código 400; el campo detail de la respuesta es \"La fecha de fin no puede ser anterior a la fecha de inicio\""
+    },
+    {
+      "id": "CP-08",
+      "escenario": "Error - la fecha de fin es anterior a la fecha de inicio",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 10, número EMP-0010 y fecha_ingreso 2018-03-01"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-10",
+        "Escribir 2026-07-10 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2026-07-06 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "10",
+        "fecha_inicio": "2026-07-10",
+        "fecha_fin": "2026-07-06"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"La fecha de fin no puede ser anterior a la fecha de inicio\""
+    },
+    {
+      "id": "CP-09",
+      "escenario": "Error - el periodo cruza de un año a otro",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 11, número EMP-0011 y fecha_ingreso 2018-03-01"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/11/vacaciones con body {fecha_inicio: 2026-12-28, fecha_fin: 2027-01-08}"
+      ],
+      "datos": {
+        "empleado_id": "11",
+        "fecha_inicio": "2026-12-28",
+        "fecha_fin": "2027-01-08"
+      },
+      "resultado_esperado": "Código 400; el campo detail de la respuesta es \"Las vacaciones deben estar dentro de un mismo año calendario\""
+    },
+    {
+      "id": "CP-10",
+      "escenario": "Error - el periodo cruza de un año a otro",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 11, número EMP-0011 y fecha_ingreso 2018-03-01"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-11",
+        "Escribir 2026-12-28 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2027-01-08 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "11",
+        "fecha_inicio": "2026-12-28",
+        "fecha_fin": "2027-01-08"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"Las vacaciones deben estar dentro de un mismo año calendario\""
+    },
+    {
+      "id": "CP-11",
+      "escenario": "Error - el año solicitado no está en la tabla de festivos",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 12, número EMP-0012 y fecha_ingreso 2018-03-01"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/12/vacaciones con body {fecha_inicio: 2028-06-01, fecha_fin: 2028-06-05}"
+      ],
+      "datos": {
+        "empleado_id": "12",
+        "fecha_inicio": "2028-06-01",
+        "fecha_fin": "2028-06-05"
+      },
+      "resultado_esperado": "Código 400; el campo detail de la respuesta es \"Solo se pueden solicitar vacaciones en 2026 y 2027\""
+    },
+    {
+      "id": "CP-12",
+      "escenario": "Error - el año solicitado no está en la tabla de festivos",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 12, número EMP-0012 y fecha_ingreso 2018-03-01"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-12",
+        "Escribir 2028-06-01 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2028-06-05 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "12",
+        "fecha_inicio": "2028-06-01",
+        "fecha_fin": "2028-06-05"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"Solo se pueden solicitar vacaciones en 2026 y 2027\""
+    },
+    {
+      "id": "CP-13",
+      "escenario": "Límite - primer día en que se cumple exactamente un año de antigüedad",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 13, número EMP-0013 y fecha_ingreso 2025-12-21",
+        "El empleado no tiene solicitudes de vacaciones registradas en 2026"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/13/vacaciones con body {fecha_inicio: 2026-12-21, fecha_fin: 2026-12-21}"
+      ],
+      "datos": {
+        "empleado_id": "13",
+        "fecha_inicio": "2026-12-21",
+        "fecha_fin": "2026-12-21"
+      },
+      "resultado_esperado": "Código 201; el campo dias_habiles de la respuesta es 1; el campo dias_restantes de la respuesta es 11"
+    },
+    {
+      "id": "CP-14",
+      "escenario": "Límite - primer día en que se cumple exactamente un año de antigüedad",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 13, número EMP-0013 y fecha_ingreso 2025-12-21",
+        "El empleado no tiene solicitudes de vacaciones registradas en 2026"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-13",
+        "Escribir 2026-12-21 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2026-12-21 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "13",
+        "fecha_inicio": "2026-12-21",
+        "fecha_fin": "2026-12-21"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"Solicitud registrada: 1 días hábiles. Te quedan 11 días hábiles en 2026.\""
+    },
+    {
+      "id": "CP-15",
+      "escenario": "Error - antigüedad insuficiente, le faltan días para cumplir el año",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 14, número EMP-0014 y fecha_ingreso 2025-12-21"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/14/vacaciones con body {fecha_inicio: 2026-12-18, fecha_fin: 2026-12-20}"
+      ],
+      "datos": {
+        "empleado_id": "14",
+        "fecha_inicio": "2026-12-18",
+        "fecha_fin": "2026-12-20"
+      },
+      "resultado_esperado": "Código 400; el campo detail de la respuesta es \"Se requiere al menos un año de antigüedad a la fecha de inicio\""
+    },
+    {
+      "id": "CP-16",
+      "escenario": "Error - antigüedad insuficiente, le faltan días para cumplir el año",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 14, número EMP-0014 y fecha_ingreso 2025-12-21"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-14",
+        "Escribir 2026-12-18 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2026-12-20 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "14",
+        "fecha_inicio": "2026-12-18",
+        "fecha_fin": "2026-12-20"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"Se requiere al menos un año de antigüedad a la fecha de inicio\""
+    },
+    {
+      "id": "CP-17",
+      "escenario": "Error - el periodo no tiene ningún día hábil",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 15, número EMP-0015 y fecha_ingreso 2018-03-01"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/15/vacaciones con body {fecha_inicio: 2026-07-11, fecha_fin: 2026-07-12}"
+      ],
+      "datos": {
+        "empleado_id": "15",
+        "fecha_inicio": "2026-07-11",
+        "fecha_fin": "2026-07-12"
+      },
+      "resultado_esperado": "Código 400; el campo detail de la respuesta es \"El periodo no incluye días hábiles\""
+    },
+    {
+      "id": "CP-18",
+      "escenario": "Error - el periodo no tiene ningún día hábil",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 15, número EMP-0015 y fecha_ingreso 2018-03-01"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-15",
+        "Escribir 2026-07-11 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2026-07-12 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "15",
+        "fecha_inicio": "2026-07-11",
+        "fecha_fin": "2026-07-12"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"El periodo no incluye días hábiles\""
+    },
+    {
+      "id": "CP-19",
+      "escenario": "Límite - se acepta usar exactamente lo que queda del tope anual",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 16, número EMP-0016 y fecha_ingreso 2018-03-01",
+        "El empleado ya tiene 5 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/16/vacaciones con body {fecha_inicio: 2026-07-13, fecha_fin: 2026-07-21}"
+      ],
+      "datos": {
+        "empleado_id": "16",
+        "fecha_inicio": "2026-07-13",
+        "fecha_fin": "2026-07-21"
+      },
+      "resultado_esperado": "Código 201; el campo dias_habiles de la respuesta es 7; el campo dias_restantes de la respuesta es 0"
+    },
+    {
+      "id": "CP-20",
+      "escenario": "Límite - se acepta usar exactamente lo que queda del tope anual",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 16, número EMP-0016 y fecha_ingreso 2018-03-01",
+        "El empleado ya tiene 5 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-16",
+        "Escribir 2026-07-13 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2026-07-21 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "16",
+        "fecha_inicio": "2026-07-13",
+        "fecha_fin": "2026-07-21"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"Solicitud registrada: 7 días hábiles. Te quedan 0 días hábiles en 2026.\""
+    },
+    {
+      "id": "CP-21",
+      "escenario": "Error - la solicitud rebasa los días disponibles del año",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 17, número EMP-0017 y fecha_ingreso 2018-03-01",
+        "El empleado ya tiene 4 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/17/vacaciones con body {fecha_inicio: 2026-08-03, fecha_fin: 2026-08-13} (periodo con 9 días hábiles)"
+      ],
+      "datos": {
+        "empleado_id": "17",
+        "fecha_inicio": "2026-08-03",
+        "fecha_fin": "2026-08-13"
+      },
+      "resultado_esperado": "Código 400; el campo detail de la respuesta es \"La solicitud excede los días disponibles: quedan 8 días hábiles\""
+    },
+    {
+      "id": "CP-22",
+      "escenario": "Error - la solicitud rebasa los días disponibles del año",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 17, número EMP-0017 y fecha_ingreso 2018-03-01",
+        "El empleado ya tiene 4 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-17",
+        "Escribir 2026-08-03 en el campo data-testid vacaciones-fecha-inicio",
+        "Escribir 2026-08-13 en el campo data-testid vacaciones-fecha-fin",
+        "Hacer clic en el botón data-testid vacaciones-enviar"
+      ],
+      "datos": {
+        "empleado_id": "17",
+        "fecha_inicio": "2026-08-03",
+        "fecha_fin": "2026-08-13"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-mensaje muestra \"La solicitud excede los días disponibles: quedan 8 días hábiles\""
+    },
+    {
+      "id": "CP-23",
+      "escenario": "Consultar el saldo de vacaciones del año",
+      "nivel": "api",
+      "precondiciones": [
+        "Empleado activo con id 18, número EMP-0018 y fecha_ingreso 2018-03-01",
+        "El empleado tiene registrada una solicitud del 2026-12-21 al 2026-12-31 con 8 días hábiles en 2026"
+      ],
+      "pasos": [
+        "Enviar GET /api/empleados/18/vacaciones?anio=2026"
+      ],
+      "datos": {
+        "empleado_id": "18",
+        "anio": "2026"
+      },
+      "resultado_esperado": "Código 200; el campo dias_usados de la respuesta es 8; el campo dias_disponibles de la respuesta es 4; la lista solicitudes tiene 1 elemento con fecha_inicio 2026-12-21, fecha_fin 2026-12-31 y dias_habiles 8"
+    },
+    {
+      "id": "CP-24",
+      "escenario": "Consultar el saldo de vacaciones del año",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Empleado activo con id 18, número EMP-0018 y fecha_ingreso 2018-03-01",
+        "El empleado tiene registrada una solicitud del 2026-12-21 al 2026-12-31 con 8 días hábiles en 2026"
+      ],
+      "pasos": [
+        "Abrir el directorio de empleados",
+        "Hacer clic en el botón data-testid vacaciones-abrir-18",
+        "Verificar que el campo data-testid vacaciones-disponibles muestra el valor 4"
+      ],
+      "datos": {
+        "empleado_id": "18",
+        "anio": "2026"
+      },
+      "resultado_esperado": "El elemento data-testid vacaciones-disponibles muestra el valor 4"
+    }
+  ]
+}

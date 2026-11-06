@@ -33,6 +33,7 @@ class Estado(s3.Estado, total=False):
     log_e2e: str
     ciclos: int
     responsable: str
+    fallos_previos: list[str]
     instruccion: str
 
 
@@ -75,10 +76,20 @@ def despues_de_e2e(s: Estado) -> Literal["triage", "fin"]:
     return "triage" if not s["e2e_ok"] and s["ciclos"] < MAX_CICLOS else "fin"
 
 
+def pruebas_fallidas(log: str) -> list[str]:
+    return sorted(l for l in log.splitlines() if l.startswith("- "))
+
+
 def triage(s: Estado) -> Estado:
     d = diagnosticar(s["hu"], s["log_e2e"])                            # supervisor: enruta, no corrige
-    return {"responsable": d.responsable, "instruccion": f"{d.causa}\n{d.instruccion}\n\n{s['log_e2e']}",
-            "ciclos": s["ciclos"] + 1, "bitacora": [f"Triage → {d.responsable}: {d.causa}"]}
+    fallos = pruebas_fallidas(s["log_e2e"])
+    responsable = d.responsable
+    # Si corregir las pruebas no cambió nada, el código decide: ahora le toca al desarrollador
+    if responsable == "automatizador" == s.get("responsable") and fallos == s.get("fallos_previos"):
+        responsable = "desarrollador"
+    return {"responsable": responsable, "fallos_previos": fallos,
+            "instruccion": f"{d.causa}\n{d.instruccion}\n\n{s['log_e2e']}",
+            "ciclos": s["ciclos"] + 1, "bitacora": [f"Triage → {responsable}: {d.causa}"]}
 
 
 def despues_de_triage(s: Estado) -> Literal["corregir_codigo", "corregir_pruebas", "corregir_despliegue"]:

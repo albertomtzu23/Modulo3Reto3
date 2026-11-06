@@ -21,8 +21,8 @@ Este archivo se copia como `app/CLAUDE.md`. Claude Code lo lee antes de escribir
 - Recurso principal: `/api/empleados`. Campos en español: `id`, `numero_empleado`, `nombre`, `correo`, `puesto`, `departamento`, `fecha_ingreso`, `estado`, `fecha_baja`, `creado_en`.
 - Catálogo: `GET /api/departamentos` devuelve la lista de departamentos válidos.
 - Fechas en formato ISO (`AAAA-MM-DD`).
-- Errores con la forma `{"detail": "mensaje en español"}` y códigos 404, 409 o 422.
-- Las historias futuras agregarán recursos nuevos (por ejemplo `/api/vacaciones`); el código debe permitir agregarlos sin reescribir lo existente.
+- Errores con la forma `{"detail": "mensaje en español"}` y códigos 404, 409 o 422. Vacaciones (HU-10) también usa 400, según su tabla de errores.
+- Las historias futuras agregarán recursos nuevos (por ejemplo `/api/empleados/{id}/vacaciones`); el código debe permitir agregarlos sin reescribir lo existente.
 
 ## Selectores para pruebas (data-testid)
 
@@ -43,6 +43,7 @@ Todo elemento que una prueba necesite tocar lleva `data-testid` con estos nombre
 
 - Las reglas de negocio te llegan en el prompt; aquí no tienes acceso a carpetas superiores.
 - Si `app/` ya tiene código de historias anteriores, extiéndelo sin romperlo.
+- Un mensaje de éxito debe seguir visible después de cerrar el formulario y recargar el directorio: guarda su estado en un componente que no se desmonte (por ejemplo `App`), no en el formulario que se cierra.
 - No agregues autenticación ni dependencias que no estén en esta lista sin justificarlo.
 - Al terminar: `GET /api/salud` responde y `npm run build` termina sin errores.
 

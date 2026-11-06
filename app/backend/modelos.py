@@ -1,7 +1,7 @@
 """Modelos SQLAlchemy del dominio de empleados."""
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, String
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from basedatos import Base
@@ -28,3 +28,13 @@ class Empleado(Base):
     estado: Mapped[str] = mapped_column(String(10), default="activo")
     fecha_baja: Mapped[date | None] = mapped_column(Date, nullable=True, default=None)
     creado_en: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Vacaciones(Base):
+    __tablename__ = "vacaciones"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    empleado_id: Mapped[int] = mapped_column(ForeignKey("empleados.id"))
+    fecha_inicio: Mapped[date] = mapped_column(Date)
+    fecha_fin: Mapped[date] = mapped_column(Date)
+    dias_habiles: Mapped[int] = mapped_column(Integer)

@@ -4,7 +4,6 @@ function EditarEmpleado({ empleado, onGuardado, onCancelar }) {
   const [departamentos, setDepartamentos] = useState([])
   const [puesto, setPuesto] = useState(empleado.puesto)
   const [departamento, setDepartamento] = useState(empleado.departamento)
-  const [mensajeExito, setMensajeExito] = useState('')
   const [mensajeError, setMensajeError] = useState('')
 
   useEffect(() => {
@@ -16,7 +15,6 @@ function EditarEmpleado({ empleado, onGuardado, onCancelar }) {
 
   const guardar = async (evento) => {
     evento.preventDefault()
-    setMensajeExito('')
     setMensajeError('')
 
     try {
@@ -32,8 +30,7 @@ function EditarEmpleado({ empleado, onGuardado, onCancelar }) {
         return
       }
 
-      setMensajeExito(`Empleado ${cuerpo.numero_empleado} actualizado con éxito`)
-      onGuardado?.()
+      onGuardado?.(`Empleado ${cuerpo.numero_empleado} actualizado con éxito`)
     } catch {
       setMensajeError('No se pudo contactar al servidor')
     }
@@ -75,7 +72,6 @@ function EditarEmpleado({ empleado, onGuardado, onCancelar }) {
         Cancelar
       </button>
 
-      {mensajeExito && <p data-testid="mensaje-exito">{mensajeExito}</p>}
       {mensajeError && <p data-testid="mensaje-error">{mensajeError}</p>}
     </form>
   )

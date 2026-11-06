@@ -1,6 +1,9 @@
 import { useEffect, useImperativeHandle, forwardRef, useState } from 'react'
 
-const DirectorioEmpleados = forwardRef(function DirectorioEmpleados({ onEditar, onBaja }, ref) {
+const DirectorioEmpleados = forwardRef(function DirectorioEmpleados(
+  { onEditar, onBaja, onVacaciones },
+  ref
+) {
   const [empleados, setEmpleados] = useState([])
   const [departamentos, setDepartamentos] = useState([])
   const [textoBusqueda, setTextoBusqueda] = useState('')
@@ -92,6 +95,15 @@ const DirectorioEmpleados = forwardRef(function DirectorioEmpleados({ onEditar, 
                   >
                     Dar de baja
                   </button>
+                  {empleado.estado !== 'baja' && (
+                    <button
+                      type="button"
+                      data-testid={`vacaciones-abrir-${empleado.id}`}
+                      onClick={() => onVacaciones?.(empleado)}
+                    >
+                      Solicitar vacaciones
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

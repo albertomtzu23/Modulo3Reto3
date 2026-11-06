@@ -2,12 +2,10 @@ import { useState } from 'react'
 
 function BajaEmpleado({ empleado, onConfirmada, onCancelar }) {
   const [fechaBaja, setFechaBaja] = useState('')
-  const [mensajeExito, setMensajeExito] = useState('')
   const [mensajeError, setMensajeError] = useState('')
 
   const confirmar = async (evento) => {
     evento.preventDefault()
-    setMensajeExito('')
     setMensajeError('')
 
     try {
@@ -23,8 +21,7 @@ function BajaEmpleado({ empleado, onConfirmada, onCancelar }) {
         return
       }
 
-      setMensajeExito(`Empleado ${cuerpo.numero_empleado} dado de baja con éxito`)
-      onConfirmada?.()
+      onConfirmada?.(`Empleado ${cuerpo.numero_empleado} dado de baja con éxito`)
     } catch {
       setMensajeError('No se pudo contactar al servidor')
     }
@@ -51,7 +48,6 @@ function BajaEmpleado({ empleado, onConfirmada, onCancelar }) {
         Cancelar
       </button>
 
-      {mensajeExito && <p data-testid="mensaje-exito">{mensajeExito}</p>}
       {mensajeError && <p data-testid="mensaje-error">{mensajeError}</p>}
     </form>
   )

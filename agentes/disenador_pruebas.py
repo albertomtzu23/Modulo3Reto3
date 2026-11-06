@@ -36,6 +36,7 @@ Cómo trabajas:
 2. Para cada escenario escribe al menos un caso de nivel "api". Si el escenario involucra la pantalla,
    escribe además uno de nivel "e2e" cuyos pasos mencionen los data-testid que se usan.
 3. Usa datos concretos. Para correos usa el dominio corporativo empresa.com.
+   Copia los mensajes de error de los criterios letra por letra en resultado_esperado.
 4. Guarda los casos llamando a la herramienta guardar_casos (no escribas el JSON a mano).
    - "nivel" solo puede ser "api" o "e2e".
    - En "datos" TODOS los valores son texto: "201", no 201; para un campo vacío usa "", nunca null.
