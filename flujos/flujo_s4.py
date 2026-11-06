@@ -27,6 +27,7 @@ MAX_CICLOS = 2
 
 
 class Estado(s3.Estado, total=False):
+    """Estado de la sesión 3 más el filtro de seguridad, las pruebas E2E y el triage."""
     historia_sospechosa: bool
     motivo_sospecha: str
     e2e_ok: bool
@@ -44,6 +45,7 @@ class Veredicto(BaseModel):
 
 
 def filtrar_historia(s: Estado) -> Estado:
+    """Primer nodo: clasifica la historia como contenido no confiable antes de que la lea un agente."""
     #Lee la variable DEFENSAS; si no existe, usa "1"
     #¿Por que? Es para efectos didácticos, si DEFENSAS=0 entonces depende si el modelo se resiste
     if os.environ.get("DEFENSAS", "1") == "0":
@@ -62,25 +64,30 @@ def filtrar_historia(s: Estado) -> Estado:
 
 
 def despues_de_filtrar(s: Estado) -> Literal["analizar", "fin"]:
+    """Salta al reporte si la historia es sospechosa; si no, pasa al analista."""
     return "fin" if s["historia_sospechosa"] else "analizar"
 
 
 # --- Flujo E2E -------------------------------------------------------------
 def pruebas_e2e(s: Estado) -> Estado:
+    """Nodo determinista: corre todas las pruebas contra la app desplegada."""
     ok, log = ejecutar_pruebas(s["hu"])                                # determinista: pytest + Playwright
     return {"e2e_ok": ok, "log_e2e": log, "ciclos": s.get("ciclos", 0),
             "bitacora": [f"Pruebas E2E: {log.splitlines()[0]}"]}
 
 
 def despues_de_e2e(s: Estado) -> Literal["triage", "fin"]:
+    """Pasa a triage si hay fallas y quedan ciclos; si no, termina."""
     return "triage" if not s["e2e_ok"] and s["ciclos"] < MAX_CICLOS else "fin"
 
 
 def pruebas_fallidas(log: str) -> list[str]:
+    """Extrae del log la lista ordenada de pruebas que fallaron."""
     return sorted(l for l in log.splitlines() if l.startswith("- "))
 
 
 def triage(s: Estado) -> Estado:
+    """Nodo: elige al responsable; si el automatizador no logró cambiar los fallos, pasa al desarrollador."""
     d = diagnosticar(s["hu"], s["log_e2e"])                            # supervisor: enruta, no corrige
     fallos = pruebas_fallidas(s["log_e2e"])
     responsable = d.responsable
@@ -93,27 +100,32 @@ def triage(s: Estado) -> Estado:
 
 
 def despues_de_triage(s: Estado) -> Literal["corregir_codigo", "corregir_pruebas", "corregir_despliegue"]:
+    """Enruta al nodo de corrección del responsable elegido."""
     return {"desarrollador": "corregir_codigo", "automatizador": "corregir_pruebas",
             "despliegue": "corregir_despliegue"}[s["responsable"]]
 
 
 def corregir_codigo(s: Estado) -> Estado:
+    """Nodo: el desarrollador corrige y los contenedores se reconstruyen sin LLM."""
     _, costo = desarrollador.construir(s["hu"], s["plan"], s["instruccion"])
     ok, log = redesplegar()                                            # reconstruir contenedores sin LLM
     return {"costo_usd": costo, "bitacora": [f"Código corregido; redespliegue {'OK' if ok else 'FALLA'}"]}
 
 
 def corregir_pruebas(s: Estado) -> Estado:
+    """Nodo: el automatizador corrige las pruebas."""
     _, costo = agente_automatizador(s["hu"], s["instruccion"])
     return {"costo_usd": costo, "bitacora": ["Pruebas corregidas"]}
 
 
 def corregir_despliegue(s: Estado) -> Estado:
+    """Nodo: el agente de despliegue corrige los contenedores."""
     _, costo = agente_despliegue(s["instruccion"])
     return {"costo_usd": costo, "bitacora": ["Despliegue corregido"]}
 
 
 def reporte(s: Estado) -> Estado:
+    """Nodo final: escribe reporte.md con el estado, el costo, la bitácora y el último log de pruebas."""
     carpeta = SALIDA / s.get("hu", "bloqueada")
     carpeta.mkdir(parents=True, exist_ok=True)
     estado = ("BLOQUEADA POR SEGURIDAD" if s.get("historia_sospechosa")
@@ -128,6 +140,7 @@ def reporte(s: Estado) -> Estado:
 
 
 def construir_grafo():
+    """Arma y compila el grafo completo, y guarda su dibujo en flujos/salidas/."""
     g = StateGraph(Estado)
     for nombre, fn in [("filtrar_historia", filtrar_historia), ("analizar", s2.analizar),
                        ("pedir_aclaracion", s2.pedir_aclaracion), ("disenar_casos", s2.disenar),

@@ -1,3 +1,4 @@
+"""Utilidades de los flujos: dibujar el grafo de LangGraph."""
 import os
 import html
 import os
@@ -12,7 +13,6 @@ def dibuja_grafo(app, nombre: str) -> Path:
     """Guarda el grafo de LangGraph como página HTML (Mermaid) en flujos/salidas/grafo_<nombre>.html.
 
     Las aristas sólidas son add_edge; las punteadas, add_conditional_edges.
-    Con abrir=True además lo muestra en el navegador.
     """
     texto = app.get_graph().draw_mermaid()
     pagina = f"""<!doctype html><meta charset="utf-8"><title>Grafo · {nombre}</title>

@@ -25,6 +25,7 @@ Responde con las URL de la aplicación y de la documentación de la API."""
 
 
 def desplegar(errores: str = "") -> tuple[str, float]:
+    """Agente 4: crea los archivos de Docker y levanta la app; `errores` describe el fallo anterior."""
     prompt = TAREA + (f"\n\nEl despliegue anterior falló; corrige esto:\n{errores}" if errores else "")
     return ejecutar_claude_code(prompt, agente="despliegue", cwd=APP, herramientas=EDICION,
                                 escritura=ESCRITURA, programas=PROGRAMAS, instrucciones=INSTRUCCIONES)

@@ -17,6 +17,7 @@ EDICION = ["Read", "Glob", "Grep", "Write", "Edit", "Bash"]
 
 
 async def _consultar(prompt: str, opciones: ClaudeAgentOptions) -> ResultMessage:
+    """Consume los mensajes de Claude Code y devuelve el resultado final."""
     resultado = None
     async for mensaje in query(prompt=prompt, options=opciones):
         if isinstance(mensaje, ResultMessage):

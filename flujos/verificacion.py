@@ -16,6 +16,7 @@ from agentes.base import APP, SALIDA
 
 
 def _responde(url: str, intentos: int = 30) -> tuple[bool, str]:
+    """Consulta una URL hasta que responda sin error o se acaben los intentos."""
     for _ in range(intentos):
         try:
             r = httpx.get(url, timeout=2)
@@ -28,6 +29,7 @@ def _responde(url: str, intentos: int = 30) -> tuple[bool, str]:
 
 
 def _correr(comando: list[str], cwd: Path, timeout: int = 600) -> tuple[bool, str]:
+    """Ejecuta un comando y devuelve (ok, final de su salida)."""
     # En Windows npm es npm.cmd: subprocess sólo lo encuentra con la ruta completa
     comando = [shutil.which(comando[0]) or comando[0], *comando[1:]]
     r = subprocess.run(comando, cwd=cwd, capture_output=True, text=True, timeout=timeout)
@@ -61,6 +63,7 @@ def verificar_frontend() -> tuple[bool, str]:
 
 
 def verificar_app() -> tuple[bool, str]:
+    """Combina las verificaciones de backend y front-end en un solo resultado."""
     ok_b, log_b = verificar_backend()
     ok_f, log_f = verificar_frontend()
     return ok_b and ok_f, f"## Backend\n{log_b}\n\n## Frontend\n{log_f}"
@@ -73,6 +76,7 @@ def redesplegar() -> tuple[bool, str]:
 
 
 def verificar_despliegue() -> tuple[bool, str]:
+    """Comprueba que la API, la web y el proxy de la web a la API respondan."""
     resultados = [_responde(u, intentos=60) for u in
                   ("http://localhost:8000/api/salud", "http://localhost:8080", "http://localhost:8080/api/salud")]
     return all(ok for ok, _ in resultados), "\n".join(log for _, log in resultados)

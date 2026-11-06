@@ -62,6 +62,7 @@ def validar_plan(texto: str, gherkin: str) -> list[str]:
 def herramienta_guardar_casos(destino: Path) -> Herramienta:
     """El contrato viaja en el esquema de la herramienta: el modelo llena campos, no escribe JSON a mano."""
     def guardar_casos(historia: str, casos: list) -> str:
+        """Valida el plan contra PlanPruebas y lo guarda; si no cumple, lanza el error para el modelo."""
         try:
             plan = PlanPruebas.model_validate({"historia": historia, "casos": casos})
         except ValidationError as e:  # el error regresa al modelo como texto, corto y accionable
@@ -80,6 +81,7 @@ def herramienta_guardar_casos(destino: Path) -> Herramienta:
 
 
 def disenar_casos(criterios: Path, max_intentos: int = 2) -> Path:
+    """Agente 2: escribe los casos y reintenta con los problemas que reporta validar_plan."""
     carpeta = criterios.parent
     destino = carpeta / "casos_prueba.json"
     lectura = [h for h in herramientas_archivos(lectura=[RAIZ / "contexto", carpeta], escritura=carpeta)

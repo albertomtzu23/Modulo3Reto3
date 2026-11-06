@@ -21,6 +21,7 @@ MAX_INTENTOS = 2
 
 
 class Estado(TypedDict, total=False):
+    """Estado compartido del flujo; los campos con reductor acumulan lo que aporta cada nodo."""
     historia: str
     hu: str
     criterios: str
@@ -38,6 +39,7 @@ class Estado(TypedDict, total=False):
 
 # --- Nodos -----------------------------------------------------------------
 def analizar(s: Estado) -> Estado:
+    """Nodo: genera los criterios y registra sus preguntas abiertas."""
     ruta = generar_criterios(Path(s["historia"]))                      # Agente 1
     return {"hu": hu_de(Path(s["historia"])), "criterios": str(ruta), "intentos": 0, "costo_usd": 0.0,
             "preguntas": preguntas_abiertas(ruta.read_text(encoding="utf-8")),
@@ -45,10 +47,12 @@ def analizar(s: Estado) -> Estado:
 
 
 def despues_de_analizar(s: Estado) -> Literal["pedir_aclaracion", "disenar_casos"]:
+    """Pide aclaración si hay preguntas abiertas; si no, pasa a diseñar casos."""
     return "pedir_aclaracion" if s["preguntas"] else "disenar_casos"
 
 
 def pedir_aclaracion(s: Estado) -> Estado:
+    """Nodo con pausa humana: muestra las preguntas abiertas y pregunta si se continúa."""
     respuesta = interrupt({"preguntas": s["preguntas"],
                            "pregunta": "Hay preguntas abiertas. ¿Continuar de todos modos? (si/no)"})
     return {"bitacora": [f"Preguntas abiertas: la persona respondió '{respuesta}'"],
@@ -56,20 +60,24 @@ def pedir_aclaracion(s: Estado) -> Estado:
 
 
 def despues_de_aclarar(s: Estado) -> Literal["disenar_casos", "__end__"]:
+    """Termina si la persona decidió detener; si no, pasa a diseñar casos."""
     return END if s.get("comentarios") == "detener" else "disenar_casos"
 
 
 def disenar(s: Estado) -> Estado:
+    """Nodo: genera los casos de prueba a partir de los criterios."""
     ruta = disenar_casos(Path(s["criterios"]))                         # Agente 2
     return {"casos": str(ruta), "bitacora": [f"Casos de prueba escritos en {ruta.name}"]}
 
 
 def planificar(s: Estado) -> Estado:
+    """Nodo: pide al desarrollador un plan, en solo lectura, con los comentarios previos."""
     plan, costo = desarrollador.planificar(s["hu"], s.get("comentarios", ""))   # Agente 3, solo lectura
     return {"plan": plan, "costo_usd": costo}
 
 
 def aprobar_plan(s: Estado) -> Estado:
+    """Nodo con pausa humana: aprueba el plan con 'si' o lo rechaza con comentarios."""
     decision = interrupt({"plan": s["plan"], "pregunta": "¿Aprobar el plan? Escribe 'si' o tus comentarios"})
     if decision.strip().lower() == "si":
         return {"plan_aprobado": True, "bitacora": ["Plan aprobado por una persona"]}
@@ -77,25 +85,30 @@ def aprobar_plan(s: Estado) -> Estado:
 
 
 def despues_de_aprobar(s: Estado) -> Literal["construir", "planificar"]:
+    """Construye si el plan se aprobó; si no, vuelve a planificar."""
     return "construir" if s["plan_aprobado"] else "planificar"
 
 
 def construir(s: Estado) -> Estado:
+    """Nodo: implementa el plan aprobado, con los errores de la verificación anterior si los hay."""
     errores = "" if s.get("app_ok", True) else s.get("log_verificacion", "")
     resumen, costo = desarrollador.construir(s["hu"], s["plan"], errores)      # Agente 3, edición
     return {"intentos": s["intentos"] + 1, "costo_usd": costo, "bitacora": [f"Construcción {s['intentos'] + 1}"]}
 
 
 def verificar(s: Estado) -> Estado:
+    """Nodo determinista: comprueba que el backend arranca y que el front-end compila."""
     ok, log = verificar_app()                                          # determinista, sin LLM
     return {"app_ok": ok, "log_verificacion": log, "bitacora": [f"Verificación: {'OK' if ok else 'FALLA'}"]}
 
 
 def despues_de_verificar(s: Estado) -> Literal["construir", "fin"]:
+    """Reintenta la construcción si falló y quedan intentos; si no, termina."""
     return "construir" if not s["app_ok"] and s["intentos"] < MAX_INTENTOS else "fin"
 
 
 def fin(s: Estado) -> Estado:
+    """Nodo final: imprime el estado, el costo y la bitácora."""
     print(f"\n=== {s['hu']} · app {'LISTA' if s.get('app_ok') else 'ESCALAR A UNA PERSONA'} "
           f"· {s.get('costo_usd', 0):.2f} USD ===")
     for linea in s.get("bitacora", []):
@@ -104,6 +117,7 @@ def fin(s: Estado) -> Estado:
 
 
 def construir_grafo():
+    """Arma y compila el grafo de la sesión 2, y guarda su dibujo en flujos/salidas/."""
     g = StateGraph(Estado)
     for nombre, fn in [("analizar", analizar), ("pedir_aclaracion", pedir_aclaracion),
                        ("disenar_casos", disenar), ("planificar", planificar), ("aprobar_plan", aprobar_plan),

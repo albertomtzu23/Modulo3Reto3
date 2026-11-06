@@ -37,10 +37,12 @@ def mensajes_exactos(hu: str) -> list[str]:
 
 
 def escenarios(gherkin: str) -> list[str]:
+    """Devuelve los nombres de los escenarios de un texto Gherkin."""
     return re.findall(r"^\s*Escenario:\s*(.+?)\s*$", gherkin, flags=re.MULTILINE)
 
 
 def preguntas_abiertas(gherkin: str) -> list[str]:
+    """Extrae las líneas de la sección '# Preguntas abiertas'; vacío si no existe."""
     if "# Preguntas abiertas" not in gherkin:
         return []
     bloque = gherkin.split("# Preguntas abiertas", 1)[1]
@@ -69,6 +71,7 @@ def validar_gherkin(texto: str, mensajes: list[str] | None = None) -> list[str]:
 
 
 def generar_criterios(historia: Path, max_intentos: int = 3) -> Path:
+    """Agente 1: escribe los criterios y reintenta con los problemas que reporta validar_gherkin."""
     carpeta = SALIDA / hu_de(historia)
     destino = carpeta / "criterios.feature"
     herramientas = herramientas_archivos(lectura=[RAIZ / "historias", RAIZ / "contexto"], escritura=carpeta)

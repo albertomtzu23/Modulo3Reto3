@@ -38,6 +38,7 @@ El automatizador no puede modificar la aplicación: no le asignes una falla que 
 
 
 def diagnosticar(hu: str, fallos: str) -> Diagnostico:
+    """Agente 6: decide quién corrige unas pruebas fallidas, a partir de criterios y convenciones."""
     llm = ChatAnthropic(model=os.environ["MODEL"], max_tokens=2000)
     criterios = (SALIDA / hu / "criterios.feature").read_text(encoding="utf-8")
     convenciones = (RAIZ / "contexto" / "convenciones_app.md").read_text(encoding="utf-8")
